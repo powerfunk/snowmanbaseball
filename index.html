@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baseball Blast</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('title9.jpg');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        #countdownScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            z-index: 999;
+        }
+        #countdown {
+            font-size: 72px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        #controls {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        #controls ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+        #controls li {
+            margin: 5px 0;
+            font-size: 18px;
+        }
+        #gameCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #mobileControls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            pointer-events: none;
+            z-index: 100;
+        }
+        #leftJoystick, #rightJoystick {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            pointer-events: auto;
+            opacity: 0.7;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%);
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+            display: none;
+        }
+        #leftJoystick {
+            bottom: 50px;
+            left: 50px;
+        }
+        #rightJoystick {
+            bottom: 50px;
+            right: 50px;
+        }
+        #mobileButtons {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: none;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #mobileButtons .mobileButton {
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+            font-size: 18px;
+            font-weight: bold;
+            min-width: 80px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        #mobileButtons .mobileButton:active {
+            background-color: rgba(255, 255, 255, 0.7);
+            transform: scale(0.95);
+        }
+        #stats {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #scoreboard {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: right;
+        }
+        #swingButton {
+            position: fixed;
+            bottom: 50px;
+            right: 50px;
+            width: 100px;
+            height: 100px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+            z-index: 100;
+        }
+        #swingButton:active {
+            background-color: rgba(255, 255, 255, 0.7);
+            transform: scale(0.95);
+        }
+        #movementButtons {
+            position: fixed;
+            bottom: 50px;
+            left: 50px;
+            display: none;
+            z-index: 100;
+        }
+        
+        #movementButtons .mobileButton {
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+        }
+        
+        #rightJoystick {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            pointer-events: auto;
+            opacity: 0.7;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%);
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+            display: none;
+            bottom: 50px;
+            right: 50px;
+        }
+        #directionalButtons {
+            position: fixed;
+            bottom: 50px;
+            left: 50px;
+            display: none;
+            z-index: 100;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 5px;
+            width: 180px;
+            height: 180px;
+        }
+        
+        #directionalButtons .mobileButton {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+        }
+        
+        #upButton {
+            grid-column: 2;
+            grid-row: 1;
+        }
+        
+        #leftButton {
+            grid-column: 1;
+            grid-row: 2;
+        }
+        
+        #rightButton {
+            grid-column: 3;
+            grid-row: 2;
+        }
+        
+        #downButton {
+            grid-column: 2;
+            grid-row: 3;
+        }
+        /* Chat styles */
+        #chatContainer {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 600px;
+            z-index: 100;
+        }
+        #chatMessages {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #chatInput {
+            width: 100%;
+            padding: 5px;
+            border: none;
+            border-radius: 5px;
+            display: none;
+        }
+        .chatMessage {
+            margin: 5px 0;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+        .chatMessage.fade {
+            opacity: 0;
+        }
+        #nameInput {
+            margin: 20px 0;
+            padding: 10px;
+            font-size: 18px;
+            border: 2px solid white;
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            text-align: center;
+            width: 200px;
+        }
+        #nameInput::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="loadingScreen">
+            <h1>Baseball Blast</h1>
+            <p>Click/tap to begin</p>
+        </div>
+        <div id="countdownScreen">
+            <h1>Baseball Blast</h1>
+            <p>Get ready to hit some home runs!</p>
+            <div id="countdown">3</div>
+            <div id="controls">
+                <h2>Controls:</h2>
+                <ul>
+                    <li>Arrow Keys: Move batter</li>
+                    <li>Space: Swing bat</li>
+                    <li>V: Change view</li>
+                    <li>S: Change song</li>
+                    <li>M: Mute/unmute</li>
+                </ul>
+            </div>
+        </div>
+        <div id="stats">
+            <div>Hits: <span id="hits">0</span></div>
+            <div>Home Runs: <span id="homeRuns">0</span></div>
+            <div>Batting Average: <span id="battingAvg">.000</span></div>
+        </div>
+        <div id="scoreboard">
+            <div>Runs: <span id="runs">0</span></div>
+            <div>Strikes: <span id="strikes">0</span></div>
+            <div>Balls: <span id="balls">0</span></div>
+        </div>
+        <div id="swingButton">SWING!</div>
+        <div id="chatContainer">
+            <div id="chatMessages"></div>
+            <input type="text" id="chatInput" placeholder="Type to chat...">
+        </div>
+        <div id="mobileControls">
+            <div id="directionalButtons">
+                <div id="upButton" class="mobileButton">↑</div>
+                <div id="leftButton" class="mobileButton">←</div>
+                <div id="rightButton" class="mobileButton">→</div>
+                <div id="downButton" class="mobileButton">↓</div>
+            </div>
+        </div>
+        <div id="mobileButtons">
+            <div class="mobileButton" id="viewButton">View</div>
+            <div class="mobileButton" id="songButton">Song</div>
+            <div class="mobileButton" id="muteButton">Mute</div>
+        </div>
+        <button id="respawnButton" style="display: none;">Respawn</button>
+    </div>
+
+    <!-- Dependencies -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "./lib/three.module.js",
+            "three/addons/": "./lib/"
+        }
+    }
+    </script>
+    <script type="module" src="lib/OrbitControls.js"></script>
+    <script src="lib/nipplejs.min.js"></script>
+    <script src="lib/socket.io.min.js"></script>
+    
+    <!-- Game Script -->
+    <script type="module" src="game.js"></script>
+</body>
+</html> 

@@ -1,0 +1,13 @@
+{
+  "name": "lazer-avoider",
+  "version": "1.0.0",
+  "description": "A multiplayer 3D game where players avoid lasers from snowmen",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  }
+} 
